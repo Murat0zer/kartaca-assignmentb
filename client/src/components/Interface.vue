@@ -1,12 +1,13 @@
 <template>
         <v-container>
-            <v-layout row wrap>
-                <v-flex offset-xs1 xs5>
-
+            <v-layout row wrap align-center justify-space-between fill-height>
+                <v-flex  xs5 >
+                    <h2 v-if="this.convertMode===convertModes.LATIN_TO_MORSE">Write latin text to encode!</h2>
+                    <h2 v-else>Write morse code to decode!</h2>
                     <v-textarea
-                            :placeholder='this.convertMode==="latinToMorse" ? "Latin Text" : "Morse Code"'
+                            :placeholder='this.convertMode===convertModes.LATIN_TO_MORSE ? "Latin Text" : "Morse Code"'
                             v-model="value"
-                            v-on:change="convertData(value)"
+                            v-on:input="convertValue(value)"
                             solo
                     >
 
@@ -14,19 +15,20 @@
 
                 </v-flex>
 
-                <v-flex offset-xs1 xs5>
+                <v-flex  xs5 >
+                    <h2 v-if="this.convertMode===convertModes.LATIN_TO_MORSE">Morse code equivalent of latin text!</h2>
+                    <h2 v-else>Latin text equivalent of morse code</h2>
                     <v-textarea
-                            v-bind:key="componentKey"
-                            :value="convertedValue"
-                            :placeholder='this.convertMode==="latinToMorse" ? "Morse Code" : "Latin Text"'
+                            :value= 'this.convertMode===convertModes.LATIN_TO_MORSE ? morseCode : latinValue'
+                            :placeholder='this.convertMode===convertModes.LATIN_TO_MORSE ? "Morse Code" : "Latin Text"'
                             solo
+                            readonly
                     >
                     </v-textarea>
                 </v-flex>
             </v-layout>
         </v-container>
 </template>
-
 <script>
 
     import Socket from 'socket.io-client'
@@ -38,11 +40,17 @@
 
     const store = new Vuex.Store({
         state: {
-            converted: ''
+            latinValue: '',
+            morseCode : '',
+            that: this
+
         },
         mutations: {
-            setConvertedValue (state, value) {
-                state.converted = value;
+            setLatinValue (state, convertedValue) {
+                state.latinValue = convertedValue;
+            },
+            setMorseCode (state, convertedValue) {
+                state.morseCode = convertedValue;
             }
         }
     });
@@ -56,32 +64,45 @@
         data() {
             return {
                 value: '',
-                convertedData: '',
-                componentKey: 0,
+                convertedValue: '',
+                convertModes : {
+                    LATIN_TO_MORSE : 'latinToMorse',
+                    MORSE_TO_LATIN : 'morseToLatin',
+                }
             }
-
         },
+
         computed: {
-            convertedValue () {
-               return  store.state.converted;
+            morseCode () {
+                return  store.state.morseCode;
+            },
+            latinValue  () {
+                return store.state.latinValue
             }
-
         },
+
         methods: {
-            convertData: function (data) {
-                socket.emit('message', {'convertMode': this.convertMode, 'data': data});
+            convertValue: function (value) {
 
+                const that = this;
+
+                socket.emit('message', {'convertMode': this.convertMode, 'value': value});
+
+                socket.on('message', function (message) {
+                    switch (message.convertMode) {
+
+                        case that.convertModes.LATIN_TO_MORSE :
+                            store.commit('setMorseCode', message.convertedValue);
+                            break;
+
+                        case that.convertModes.MORSE_TO_LATIN :
+                            store.commit('setLatinValue', message.convertedValue);
+                            break;
+                    }
+                })
             }
-
         },
     }
-
-    socket.on('message', function (message) {
-        store.commit('setConvertedValue', message.convertedData)
-    })
-
-
-
 </script>
 
 <style scoped>

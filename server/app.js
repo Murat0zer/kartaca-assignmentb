@@ -26,15 +26,12 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('message', function (message) {
-        if(message.convertMode === 'latinToMorse') {
-            message.convertedData = converter.latinToMorse(message.data);
-            console.log(message.convertedData);
-            socket.emit('message', message);
-        }
-
+        console.log(message);
+        message.convertedValue = converter.convertValue(message.value, message.convertMode);
+        console.log(message.convertedValue);
+        socket.emit('message', message);
     });
 
-    console.log(clients.length);
 });
 
 server.listen(port, (err) => {

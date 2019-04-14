@@ -1,8 +1,8 @@
 <template>
     <v-app>
         <v-toolbar app>
-            <v-toolbar-title class="headline text-uppercase">
-                <span class="font-weight-light">Latin to Morse Code Converter</span>
+            <v-toolbar-title class="headline">
+                <span class="font-weight-light">Latin Text-Morse Code Encoder-Decoder</span>
             </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-btn
